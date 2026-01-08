@@ -203,6 +203,33 @@ export const kuadrantApiKeyApprovePermission = createPermission({
   attributes: { action: 'update' },
 });
 
+/**
+ * permission to update API key requests owned by the current user
+ * allows users to edit their own pending requests (change plan tier, use case)
+ */
+export const kuadrantApiKeyRequestUpdateOwnPermission = createPermission({
+  name: 'kuadrant.apikeyrequest.update.own',
+  attributes: { action: 'update' },
+});
+
+/**
+ * permission to update any API key request regardless of ownership
+ * typically granted to API owners and platform engineers for approving/rejecting requests
+ */
+export const kuadrantApiKeyRequestUpdateAllPermission = createPermission({
+  name: 'kuadrant.apikeyrequest.update.all',
+  attributes: { action: 'update' },
+});
+
+/**
+ * permission to create API key requests
+ */
+export const kuadrantApiKeyRequestCreatePermission = createPermission({
+  name: 'kuadrant.apikeyrequest.create',
+  attributes: { action: 'create' },
+  resourceType: 'apiproduct',
+});
+
 export const kuadrantPermissions = [
   kuadrantPlanPolicyCreatePermission,
   kuadrantPlanPolicyReadPermission,
@@ -225,4 +252,7 @@ export const kuadrantPermissions = [
   kuadrantApiKeyDeleteOwnPermission,
   kuadrantApiKeyDeleteAllPermission,
   kuadrantApiKeyApprovePermission,
+  kuadrantApiKeyRequestCreatePermission,
+  kuadrantApiKeyRequestUpdateOwnPermission,
+  kuadrantApiKeyRequestUpdateAllPermission,
 ];

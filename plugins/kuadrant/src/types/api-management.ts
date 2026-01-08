@@ -58,6 +58,41 @@ export interface APIKey {
   status?: APIKeyStatus;
 }
 
+export interface APIKeyRequestSpec {
+  apiName: string;
+  apiNamespace: string;
+  planTier: PlanTier;
+  useCase?: string;
+  requestedBy: {
+    userId: string;
+    email?: string;
+  };
+  requestedAt?: string;
+}
+
+export interface APIKeyRequestStatus {
+  phase?: RequestPhase;
+  apiKey?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reason?: string;
+  apiHostname?: string;
+}
+
+export interface APIKeyRequest {
+  apiVersion?: string;
+  kind?: string;
+  metadata: {
+    name: string;
+    namespace: string;
+    creationTimestamp?: string;
+    labels?: Record<string, string>;
+    annotations?: Record<string, string>;
+  };
+  spec: APIKeyRequestSpec;
+  status?: APIKeyRequestStatus;
+}
+
 export interface Plan {
   tier: string;
   description?: string;

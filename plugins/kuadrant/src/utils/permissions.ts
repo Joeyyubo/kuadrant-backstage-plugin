@@ -35,6 +35,15 @@ export function useKuadrantPermission(
   permission: Permission,
   resourceRef?: string,
 ): PermissionCheckResult {
+  // Guard against undefined permission
+  if (!permission) {
+    return {
+      allowed: false,
+      loading: false,
+      error: new Error('Permission is undefined'),
+    };
+  }
+
   // construct the permission request based on whether it's a ResourcePermission
   const permissionRequest = 'resourceType' in permission
     ? { permission: permission as ResourcePermission, resourceRef }
