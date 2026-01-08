@@ -8,17 +8,17 @@ Backstage plugins for API access management using Kuadrant Gateway API primitive
 ## Features
 
 **For API consumers:**
-- Request API access with tiered plans (bronze, silver, gold)
+- Request API access with tiered access (bronze, silver, gold)
 - View and manage API keys
 - Track request status (pending, approved, rejected)
 
 **For platform engineers:**
 - Approve/reject API access requests
-- Manage API products and plan tiers
+- Manage API products and tiers
 - Configure rate limits via PlanPolicy
 
 **For API owners:**
-- Create API products with multiple plan tiers
+- Create API products with multiple tiers
 - Define rate limits and quotas
 - Sync API products from Kubernetes to Backstage catalog
 
@@ -61,8 +61,8 @@ Visit:
 ### Kubernetes Resources
 
 **Custom CRDs:**
-- `APIProduct` - Defines API products with plan tiers
-- `APIKeyRequest` - Tracks API access requests
+- `APIProduct` - Defines API products with tiers
+- `APIKey` - Tracks API access requests
 
 **Kuadrant components:**
 - Kuadrant operator v1.3.0
@@ -88,7 +88,7 @@ Uses local `~/.kube/config` for development:
 ```bash
 kubectl config current-context    # Verify cluster
 kubectl get apiproducts -A        # Check resources
-kubectl get apikeyrequests -A
+kubectl get apikeys -A
 ```
 
 ### Cluster Management
@@ -200,7 +200,7 @@ plugins/
 └── kuadrant-backend/             # Backend plugin
 
 kuadrant-dev-setup/               # Development environment
-├── crds/                         # APIProduct, APIKeyRequest CRDs
+├── crds/                         # APIProduct, APIKey CRDs
 ├── demo/                         # Toystore demo resources
 ├── rbac/                         # RHDH service account permissions
 ├── kuadrant-instance.yaml        # Kuadrant CR

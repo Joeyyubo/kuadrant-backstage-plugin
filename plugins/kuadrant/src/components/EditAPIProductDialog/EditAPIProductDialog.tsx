@@ -11,6 +11,7 @@ import {
   Chip,
   Grid,
   MenuItem,
+  CircularProgress,
   makeStyles,
 } from '@material-ui/core';
 import { useApi, configApiRef, fetchApiRef } from '@backstage/core-plugin-api';
@@ -18,6 +19,7 @@ import { Alert } from '@material-ui/lab';
 import { Progress } from '@backstage/core-components';
 import useAsync from 'react-use/lib/useAsync';
 import { PlanPolicyDetails } from '../PlanPolicyDetailsCard';
+import { validateEmail, validateURL } from '../../utils/validation';
 
 const useStyles = makeStyles({
   asterisk: {
@@ -53,6 +55,10 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
   const [openAPISpec, setOpenAPISpec] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  // valid error states
+  const [contactEmailError, setContactEmailError] = useState<string | null>(null);
+  const [docsURLError, setDocsURLError] = useState<string | null>(null);
+  const [openAPISpecError, setOpenAPISpecError] = useState<string | null>(null);
 
   // Load APIProduct data when dialog opens
   useEffect(() => {
@@ -80,6 +86,9 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
           setContactTeam(data.spec.contact?.team || '');
           setDocsURL(data.spec.documentation?.docsURL || '');
           setOpenAPISpec(data.spec.documentation?.openAPISpec || '');
+          setContactEmailError(null);
+          setDocsURLError(null);
+          setOpenAPISpecError(null);
           setLoading(false);
         })
         .catch(err => {
@@ -90,7 +99,10 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
   }, [open, namespace, name, backendUrl, fetchApi]);
 
   // load planpolicies with full details to show associated plans
-  const { value: planPolicies } = useAsync(async () => {
+  const {
+    value: planPolicies,
+    error: planPoliciesError
+  } = useAsync(async () => {
     if (!open) return null;
     const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/planpolicies`);
     return await response.json();
@@ -109,6 +121,31 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
       );
     });
   }, [planPolicies, targetRef, namespace]);
+
+  // val handlers
+
+  useEffect(() => {
+    if (open) {
+      setContactEmailError(null);
+      setDocsURLError(null);
+      setOpenAPISpecError(null);
+    }
+  }, [open]);
+
+  const handleContactEmailChange = (value: string) => {
+    setContactEmail(value);
+    setContactEmailError(validateEmail(value));
+  };
+
+  const handleDocsURLChange = (value: string) => {
+    setDocsURL(value);
+    setDocsURLError(validateURL(value));
+  };
+
+  const handleOpenAPISpecChange = (value: string) => {
+    setOpenAPISpec(value);
+    setOpenAPISpecError(validateURL(value));
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -184,7 +221,14 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
             {error}
           </Alert>
         )}
-
+        {planPoliciesError && (
+          <Alert severity="warning" style={{ marginBottom: 16 }}>
+            <strong>Failed to load PlanPolicies:</strong> {planPoliciesError.message}
+            <Typography variant="body2" style={{ marginTop: 8 }}>
+              Plan information may be incomplete.
+            </Typography>
+          </Alert>
+        )}
         {loading ? (
           <Progress />
         ) : (
@@ -218,6 +262,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 placeholder="My API"
                 margin="normal"
                 required
+                disabled={saving}
                 InputLabelProps={{
                   classes: {
                     asterisk: classes.asterisk,
@@ -233,6 +278,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 onChange={e => setVersion(e.target.value)}
                 placeholder="v1"
                 margin="normal"
+                disabled={saving}
               />
             </Grid>
             <Grid item xs={6}>
@@ -244,6 +290,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 onChange={e => setPublishStatus(e.target.value as 'Draft' | 'Published')}
                 margin="normal"
                 helperText="Draft: Hidden from catalog. Published: Visible in catalog."
+                disabled={saving}
               >
                 <MenuItem value="Draft">Draft (Hidden)</MenuItem>
                 <MenuItem value="Published">Published (Visible)</MenuItem>
@@ -258,6 +305,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 onChange={e => setApprovalMode(e.target.value as 'automatic' | 'manual')}
                 margin="normal"
                 helperText="Automatic: keys created immediately. Manual: requires approval."
+                disabled={saving}
               >
                 <MenuItem value="manual">Manual</MenuItem>
                 <MenuItem value="automatic">Automatic</MenuItem>
@@ -274,6 +322,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 multiline
                 rows={2}
                 required
+                disabled={saving}
                 InputLabelProps={{
                   classes: {
                     asterisk: classes.asterisk,
@@ -291,8 +340,9 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                   <Chip
                     key={tag}
                     label={tag}
-                    onDelete={() => handleDeleteTag(tag)}
+                    onDelete={saving ? undefined : () => handleDeleteTag(tag)}
                     size="small"
+                    disabled={saving}
                   />
                 ))}
               </Box>
@@ -304,8 +354,9 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyPress={e => e.key === 'Enter' && handleAddTag()}
                   placeholder="Add tag"
+                  disabled={saving}
                 />
-                <Button onClick={handleAddTag} variant="outlined" size="small">
+                <Button onClick={handleAddTag} variant="outlined" size="small" disabled={saving}>
                   Add
                 </Button>
               </Box>
@@ -339,9 +390,12 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 fullWidth
                 label="Contact Email"
                 value={contactEmail}
-                onChange={e => setContactEmail(e.target.value)}
+                onChange={e => handleContactEmailChange(e.target.value)}
                 placeholder="api-team@example.com"
+                helperText={contactEmailError || "Contact email for API support"}
+                error={!!contactEmailError}
                 margin="normal"
+                disabled={saving}
               />
             </Grid>
             <Grid item xs={6}>
@@ -352,6 +406,7 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 onChange={e => setContactTeam(e.target.value)}
                 placeholder="platform-team"
                 margin="normal"
+                disabled={saving}
               />
             </Grid>
             <Grid item xs={6}>
@@ -359,9 +414,12 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 fullWidth
                 label="Docs URL"
                 value={docsURL}
-                onChange={e => setDocsURL(e.target.value)}
+                onChange={e => handleDocsURLChange(e.target.value)}
                 placeholder="https://api.example.com/docs"
+                helperText={docsURLError || "Link to API documentation"}
+                error={!!docsURLError}
                 margin="normal"
+                disabled={saving}
               />
             </Grid>
             <Grid item xs={6}>
@@ -369,21 +427,25 @@ export const EditAPIProductDialog = ({open, onClose, onSuccess, namespace, name}
                 fullWidth
                 label="OpenAPI Spec URL"
                 value={openAPISpec}
-                onChange={e => setOpenAPISpec(e.target.value)}
+                onChange={e => handleOpenAPISpecChange(e.target.value)}
                 placeholder="https://api.example.com/openapi.json"
+                helperText={openAPISpecError || "Link to OpenAPI specification"}
+                error={!!openAPISpecError}
                 margin="normal"
+                disabled={saving}
               />
             </Grid>
           </Grid>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose} disabled={saving}>Cancel</Button>
         <Button
           onClick={handleSave}
           color="primary"
           variant="contained"
-          disabled={saving || loading || !displayName || !description}
+          disabled={saving || loading || !displayName || !description || !!contactEmailError || !!docsURLError || !!openAPISpecError}
+          startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
           {saving ? 'Saving...' : 'Save'}
         </Button>

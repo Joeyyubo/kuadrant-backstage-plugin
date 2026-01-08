@@ -5,7 +5,7 @@ Backstage plugin for Kuadrant - enables developer portals for API access managem
 ## Features
 
 - **API Access Management**: Request API keys for Kuadrant-protected APIs
-- **Tiered Plans**: Support for multiple access tiers with different rate limits via PlanPolicy
+- **Access Tiers**: Support for multiple access tiers with different rate limits via PlanPolicy
 - **User Identity**: Integrates with Backstage identity API for user-specific API keys
 - **Policy Visibility**: View AuthPolicies, RateLimitPolicies, and PlanPolicies
 - **API Key Management**: View, create, and delete API keys with show/hide toggles
@@ -210,9 +210,9 @@ kind: ClusterRole
 metadata:
   name: rhdh-kuadrant
 rules:
-  # APIProduct and APIKeyRequest CRDs
-  - apiGroups: ["extensions.kuadrant.io"]
-    resources: ["apiproducts", "apikeyrequests"]
+  # APIProduct and APIKey CRDs
+  - apiGroups: ["devportal.kuadrant.io"]
+    resources: ["apiproducts", "apikeys"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # PlanPolicy CRDs
   - apiGroups: ["kuadrant.io"]
@@ -295,7 +295,7 @@ spec:
 1. Navigate to an API entity in the catalog
 2. Click the "API Keys" tab
 3. Click "Request API Access"
-4. Select a plan tier (bronze, silver, gold) and provide use case
+4. Select a tier (bronze, silver, gold) and provide use case
 5. Wait for approval from platform engineers
 6. Once approved, your API key will appear in the API Keys tab
 
@@ -306,7 +306,7 @@ spec:
 3. Review each request with details:
    - Requester information
    - API name and namespace
-   - Requested plan tier
+   - Requested tier
    - Use case justification
 4. Approve or reject with optional comments
 5. API keys are automatically created in Kubernetes upon approval
@@ -317,7 +317,7 @@ spec:
 2. View all API products synced from Kubernetes
 3. Create new API products with:
    - Display name and description
-   - Multiple plan tiers with rate limits
+   - Multiple tiers with rate limits
    - Associated PlanPolicy references
    - Contact information and documentation links
 4. API products automatically sync to Backstage catalog as APIProduct entities
@@ -350,13 +350,13 @@ spec:
 
 The plugin creates and manages Kubernetes custom resources:
 
-### APIKeyRequest
+### APIKey
 
 Created when users request API access:
 
 ```yaml
-apiVersion: extensions.kuadrant.io/v1alpha1
-kind: APIKeyRequest
+apiVersion: devportal.kuadrant.io/v1alpha1
+kind: APIKey
 metadata:
   name: guest-toystore-abc123
   namespace: toystore
@@ -396,7 +396,7 @@ data:
 Synced from Kubernetes to Backstage catalog:
 
 ```yaml
-apiVersion: extensions.kuadrant.io/v1alpha1
+apiVersion: devportal.kuadrant.io/v1alpha1
 kind: APIProduct
 metadata:
   name: toystore-api

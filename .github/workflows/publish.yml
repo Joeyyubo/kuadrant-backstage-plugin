@@ -17,7 +17,7 @@ jobs:
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -35,6 +35,11 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Upgrade npm for trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Determine version
         id: version
@@ -83,15 +88,11 @@ jobs:
         run: |
           cd plugins/kuadrant
           npm publish --provenance --access public --tag ${{ steps.version.outputs.tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_GIT }}
 
       - name: Publish backend
         run: |
           cd plugins/kuadrant-backend
           npm publish --provenance --access public --tag ${{ steps.version.outputs.tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_GIT }}
 
       - name: Summary
         run: |

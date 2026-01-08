@@ -12,31 +12,29 @@ export interface PlanLimits {
   }>;
 }
 
-export interface APIKeyRequestSpec {
-  apiName: string;
-  apiNamespace: string;
+export interface APIKeySpec {
+  apiProductRef: {
+    name: string;
+  };
   planTier: PlanTier;
-  useCase?: string;
+  useCase: string;
   requestedBy: {
     userId: string;
     email: string;
   };
-  requestedAt?: string;
 }
 
-export interface APIKeyRequestStatus {
+export interface APIKeyStatus {
   phase?: RequestPhase;
   reviewedBy?: string;
   reviewedAt?: string;
-  reason?: string;
-  comment?: string;
-  apiKey?: string;
   apiHostname?: string;
-  apiBasePath?: string;
-  apiDescription?: string;
-  apiOasUrl?: string;
-  apiOasUiUrl?: string;
-  planLimits?: PlanLimits;
+  limits?: PlanLimits;
+  secretRef?: {
+    name: string;
+    key: string;
+  };
+  canReadSecret?: boolean;
   conditions?: Array<{
     type: string;
     status: 'True' | 'False' | 'Unknown';
@@ -46,9 +44,9 @@ export interface APIKeyRequestStatus {
   }>;
 }
 
-export interface APIKeyRequest {
-  apiVersion: 'extensions.kuadrant.io/v1alpha1';
-  kind: 'APIKeyRequest';
+export interface APIKey {
+  apiVersion: 'devportal.kuadrant.io/v1alpha1';
+  kind: 'APIKey';
   metadata: {
     name: string;
     namespace: string;
@@ -56,8 +54,8 @@ export interface APIKeyRequest {
     labels?: Record<string, string>;
     annotations?: Record<string, string>;
   };
-  spec: APIKeyRequestSpec;
-  status?: APIKeyRequestStatus;
+  spec: APIKeySpec;
+  status?: APIKeyStatus;
 }
 
 export interface Plan {
@@ -68,20 +66,22 @@ export interface Plan {
 
 export interface APIProductSpec {
   displayName: string;
-  description: string;
-  version: string;
+  description?: string;
+  version?: string;
   tags?: string[];
-  planPolicyRef?: {
+  targetRef: {
+    group: string;
+    kind: string;
     name: string;
-    namespace: string;
   };
-  plans: Plan[];
-  publishStatus?: 'Draft' | 'Published';
+  approvalMode: 'automatic' | 'manual';
+  publishStatus: 'Draft' | 'Published';
   documentation?: {
-    openAPISpec?: string;
+    openAPISpecURL?: string;
     swaggerUI?: string;
     docsURL?: string;
     gitRepository?: string;
+    techdocsRef?: string;
   };
   contact?: {
     team?: string;
@@ -92,6 +92,12 @@ export interface APIProductSpec {
 }
 
 export interface APIProductStatus {
+  observedGeneration?: number;
+  discoveredPlans?: Plan[];
+  openapi?: {
+    raw: string;
+    lastSyncTime: string;
+  };
   conditions?: Array<{
     type: string;
     status: 'True' | 'False' | 'Unknown';
@@ -99,12 +105,10 @@ export interface APIProductStatus {
     message?: string;
     lastTransitionTime?: string;
   }>;
-  planPolicyStatus?: string;
-  lastSyncTime?: string;
 }
 
 export interface APIProduct {
-  apiVersion: 'extensions.kuadrant.io/v1alpha1';
+  apiVersion: 'devportal.kuadrant.io/v1alpha1';
   kind: 'APIProduct';
   metadata: {
     name: string;

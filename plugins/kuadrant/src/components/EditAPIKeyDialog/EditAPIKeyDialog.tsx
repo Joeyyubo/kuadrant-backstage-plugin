@@ -12,15 +12,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from '@material-ui/core';
 import { useApi, configApiRef, fetchApiRef } from '@backstage/core-plugin-api';
-import { APIKeyRequest } from '../../types/api-management';
+import { APIKey } from '../../types/api-management';
 
-interface EditAPIKeyRequestDialogProps {
+interface EditAPIKeyDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  request: APIKeyRequest;
+  request: APIKey;
   availablePlans: Array<{
     tier: string;
     description?: string;
@@ -28,13 +29,13 @@ interface EditAPIKeyRequestDialogProps {
   }>;
 }
 
-export const EditAPIKeyRequestDialog = ({
+export const EditAPIKeyDialog = ({
   open,
   onClose,
   onSuccess,
   request,
   availablePlans,
-}: EditAPIKeyRequestDialogProps) => {
+}: EditAPIKeyDialogProps) => {
   const config = useApi(configApiRef);
   const fetchApi = useApi(fetchApiRef);
   const backendUrl = config.getString('backend.baseUrl');
@@ -54,7 +55,7 @@ export const EditAPIKeyRequestDialog = ({
 
   const handleSave = async () => {
     if (!planTier) {
-      setError('Please select a plan tier');
+      setError('Please select a tier');
       return;
     }
 
@@ -113,7 +114,7 @@ export const EditAPIKeyRequestDialog = ({
         )}
 
         <FormControl fullWidth margin="normal">
-          <InputLabel>Plan Tier</InputLabel>
+          <InputLabel>Tier</InputLabel>
           <Select
             value={planTier}
             onChange={(e) => setPlanTier(e.target.value as string)}
@@ -152,7 +153,9 @@ export const EditAPIKeyRequestDialog = ({
         <Button
           onClick={handleSave}
           color="primary"
+          variant="contained"
           disabled={!planTier || saving}
+          startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>

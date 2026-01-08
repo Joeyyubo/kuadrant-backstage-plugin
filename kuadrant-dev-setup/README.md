@@ -19,12 +19,12 @@ visit http://localhost:3000/kuadrant
 
 **kubernetes cluster (kind):**
 - kind cluster named `local-cluster`
-- kuadrant operator v1.3.0
+- kuadrant operator (from `main`)
 - gateway api crds v1.2.0
 - istio service mesh (base + istiod)
 
 **kuadrant components:**
-- custom crds: APIProduct, APIKeyRequest
+- custom crds: APIProduct, APIKey
 - kuadrant instance in `kuadrant-system` namespace
 
 **demo resources (toystore):**
@@ -46,8 +46,8 @@ kuadrant-dev-setup/
 ├── Makefile                  # cluster and kuadrant setup
 ├── README.md                 # this file
 ├── crds/                     # custom resource definitions
-│   ├── extensions.kuadrant.io_apiproduct.yaml
-│   └── extensions.kuadrant.io_apikeyrequest.yaml
+│   ├── devportal.kuadrant.io_apiproduct.yaml
+│   └── devportal.kuadrant.io_apikey.yaml
 ├── demo/                     # demo resources
 │   └── toystore-demo.yaml    # toystore api with policies
 ├── rbac/                     # rbac configs
@@ -67,7 +67,7 @@ make clean          # delete cluster + cleanup bin/
 
 ### kuadrant
 ```bash
-make kuadrant-install   # install kuadrant v1.3.0
+make kuadrant-install [KUADRANT_VERSION=v1.3.0] # install kuadrant. Version defaults to main branch
 make demo-install       # install toystore demo
 make demo-uninstall     # remove toystore demo
 ```
@@ -165,7 +165,7 @@ this setup is simplified for rhdh development:
 
 **what we kept:**
 - kind cluster creation
-- kuadrant v1.3.0 installation
+- kuadrant installation
 - toystore demo resources
 - custom crds
 

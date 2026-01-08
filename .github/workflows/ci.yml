@@ -21,8 +21,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'yarn'
+          node-version: "22"
+          cache: "yarn"
 
       - name: Enable Corepack
         run: corepack enable
@@ -61,8 +61,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'yarn'
+          node-version: "22"
+          cache: "yarn"
 
       - name: Enable Corepack
         run: corepack enable
@@ -80,6 +80,10 @@ jobs:
           cd e2e-tests
           yarn playwright install --with-deps chromium
 
+      # TEMPORARY: clone controller until it's published to a registry
+      - name: Clone developer-portal-controller
+        run: git clone https://github.com/Kuadrant/developer-portal-controller.git ../developer-portal-controller
+
       - name: Create kind cluster
         uses: helm/kind-action@v1
         with:
@@ -90,7 +94,8 @@ jobs:
         run: |
           cd kuadrant-dev-setup
           kubectl apply -f rbac/rhdh-rbac.yaml
-          make kuadrant-install
+          ./scripts/kube-env-setup.sh
+          make kuadrant-install CLUSTER_NAME=kuadrant-test
           make demo-install
           cd ..
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Grid, Box, Chip, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@material-ui/core';
+import { Typography, Grid, Box, Chip, Button, IconButton } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
@@ -16,7 +16,7 @@ import {
   TableColumn,
 } from '@backstage/core-components';
 import useAsync from 'react-use/lib/useAsync';
-import { useApi, configApiRef, fetchApiRef } from '@backstage/core-plugin-api';
+import { useApi, configApiRef, fetchApiRef, alertApiRef, identityApiRef } from '@backstage/core-plugin-api';
 import { ApprovalQueueCard } from '../ApprovalQueueCard';
 import { MyApiKeysCard } from '../MyApiKeysCard';
 import { PermissionGate } from '../PermissionGate';
@@ -28,18 +28,19 @@ import {
   kuadrantApiProductUpdateOwnPermission,
   kuadrantApiProductUpdateAllPermission,
   kuadrantApiProductListPermission,
-  kuadrantApiKeyRequestReadAllPermission,
-  kuadrantApiKeyRequestReadOwnPermission,
+  kuadrantApiKeyApprovePermission,
   kuadrantPlanPolicyListPermission,
 } from '../../permissions';
 import { useKuadrantPermission } from '../../utils/permissions';
 import { EditAPIProductDialog } from '../EditAPIProductDialog';
+import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 
 type KuadrantResource = {
   metadata: {
     name: string;
     namespace: string;
     creationTimestamp: string;
+    annotations?: Record<string, string>;
   };
   spec?: any;
 };
@@ -51,7 +52,10 @@ type KuadrantList = {
 export const ResourceList = () => {
   const config = useApi(configApiRef);
   const fetchApi = useApi(fetchApiRef);
+  const alertApi = useApi(alertApiRef);
+  const identityApi = useApi(identityApiRef);
   const backendUrl = config.getString('backend.baseUrl');
+  const [userEntityRef, setUserEntityRef] = useState<string>('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -59,6 +63,7 @@ export const ResourceList = () => {
   const [apiProductToDelete, setApiProductToDelete] = useState<{ namespace: string; name: string } | null>(null);
   const [apiProductToEdit, setApiProductToEdit] = useState<{ namespace: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteStats, setDeleteStats] = useState<{requests: number; secrets: number} | null>(null);
 
   const {
     allowed: canCreateApiProduct,
@@ -67,18 +72,10 @@ export const ResourceList = () => {
   } = useKuadrantPermission(kuadrantApiProductCreatePermission);
 
   const {
-    allowed: canViewAllRequests,
-    loading: approvalQueueAllPermissionLoading,
-  } = useKuadrantPermission(kuadrantApiKeyRequestReadAllPermission);
-
-  const {
-    allowed: canViewOwnRequests,
-    loading: approvalQueueOwnPermissionLoading,
+    allowed: canViewApprovalQueue,
+    loading: approvalQueuePermissionLoading,
     error: approvalQueuePermissionError,
-  } = useKuadrantPermission(kuadrantApiKeyRequestReadOwnPermission);
-
-  const canViewApprovalQueue = canViewAllRequests || canViewOwnRequests;
-  const approvalQueuePermissionLoading = approvalQueueAllPermissionLoading || approvalQueueOwnPermissionLoading;
+  } = useKuadrantPermission(kuadrantApiKeyApprovePermission);
 
   const {
     allowed: canDeleteOwnApiProduct,
@@ -99,8 +96,6 @@ export const ResourceList = () => {
     allowed: canUpdateAllApiProducts,
   } = useKuadrantPermission(kuadrantApiProductUpdateAllPermission);
 
-  const canDeleteApiProduct = canDeleteOwnApiProduct || canDeleteAllApiProducts;
-  const canUpdateApiProduct = canUpdateOwnApiProduct || canUpdateAllApiProducts;
   const deletePermissionLoading = deleteOwnPermissionLoading || deleteAllPermissionLoading;
 
   const {
@@ -108,6 +103,11 @@ export const ResourceList = () => {
     loading: planPolicyPermissionLoading,
     error: planPolicyPermissionError,
   } = useKuadrantPermission(kuadrantPlanPolicyListPermission);
+
+  useAsync(async () => {
+    const identity = await identityApi.getBackstageIdentity();
+    setUserEntityRef(identity.userEntityRef);
+  }, [identityApi]);
 
   const { value: apiProducts, loading: apiProductsLoading, error: apiProductsError } = useAsync(async (): Promise<KuadrantList> => {
     try {
@@ -160,6 +160,7 @@ export const ResourceList = () => {
 
   const handleCreateSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
+    alertApi.post({ message: 'API Product created', severity: 'success', display: 'transient' });
   };
 
   const handleEditClick = (namespace: string, name: string) => {
@@ -169,10 +170,27 @@ export const ResourceList = () => {
 
   const handleEditSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
+    alertApi.post({ message: 'API Product updated', severity: 'success', display: 'transient' });
   };
 
-  const handleDeleteClick = (namespace: string, name: string) => {
+  const handleDeleteClick = async (namespace: string, name: string) => {
     setApiProductToDelete({ namespace, name });
+    setDeleteStats(null);
+
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/requests?namespace=${namespace}`);
+      if (response.ok) {
+        const data = await response.json();
+        const related = (data.items || []).filter(
+          (r: any) => r.spec.apiName === name && r.spec.apiNamespace === namespace
+        );
+        const approved = related.filter((r: any) => r.status?.phase === 'Approved').length;
+        setDeleteStats({ requests: related.length, secrets: approved });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch delete stats:', err);
+    }
+
     setDeleteDialogOpen(true);
   };
 
@@ -191,8 +209,10 @@ export const ResourceList = () => {
       }
 
       setRefreshTrigger(prev => prev + 1);
+      alertApi.post({ message: 'API Product deleted', severity: 'success', display: 'transient' });
     } catch (err) {
       console.error('error deleting apiproduct:', err);
+      alertApi.post({ message: 'Failed to delete API Product', severity: 'error', display: 'transient' });
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
@@ -297,29 +317,38 @@ export const ResourceList = () => {
       title: 'Actions',
       field: 'actions',
       filtering: false,
-      render: (row: any) => (
-        <Box display="flex" style={{ gap: 4 }}>
-          {canUpdateApiProduct && (
-            <IconButton
-              size="small"
-              onClick={() => handleEditClick(row.metadata.namespace, row.metadata.name)}
-              title="Edit API Product"
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          )}
+      render: (row: any) => {
+        const owner = row.metadata?.annotations?.['backstage.io/owner'];
+        const isOwner = owner === userEntityRef;
+        const canEdit = canUpdateAllApiProducts || (canUpdateOwnApiProduct && isOwner);
+        const canDelete = canDeleteAllApiProducts || (canDeleteOwnApiProduct && isOwner);
 
-          {canDeleteApiProduct && (
-            <IconButton
-              size="small"
-              onClick={() => handleDeleteClick(row.metadata.namespace, row.metadata.name)}
-              title="Delete API Product"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          )}
-        </Box>
-      ),
+        if (!canEdit && !canDelete) return null;
+
+        return (
+          <Box display="flex" style={{ gap: 4 }}>
+            {canEdit && (
+              <IconButton
+                size="small"
+                onClick={() => handleEditClick(row.metadata.namespace, row.metadata.name)}
+                title="Edit API Product"
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+
+            {canDelete && (
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteClick(row.metadata.namespace, row.metadata.name)}
+                title="Delete API Product"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
+        );
+      },
     },
   ];
 
@@ -389,7 +418,7 @@ export const ResourceList = () => {
             <Typography variant="body2" color="textSecondary">
               permission: {createPermissionError ? 'kuadrant.apiproduct.create' :
                          deletePermissionError ? 'kuadrant.apiproduct.delete' :
-                         approvalQueuePermissionError ? 'kuadrant.apikeyrequest.read.all' :
+                         approvalQueuePermissionError ? 'kuadrant.apikey.read.all' :
                          planPolicyPermissionError ? 'kuadrant.planpolicy.list' : 'unknown'}
             </Typography>
             <Typography variant="body2" color="textSecondary">
@@ -453,23 +482,26 @@ export const ResourceList = () => {
           namespace={apiProductToEdit?.namespace || ''}
           name={apiProductToEdit?.name || ''}
         />
-        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-          <DialogTitle>Delete API Product</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want to delete {apiProductToDelete?.name} from namespace {apiProductToDelete?.namespace}?
-              This will permanently remove the API Product from Kubernetes.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDeleteCancel} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={handleDeleteConfirm} color="secondary" disabled={deleting}>
-              {deleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <ConfirmDeleteDialog
+          open={deleteDialogOpen}
+          title="Delete API Product"
+          description={
+            deleteStats
+              ? `Deleting "${apiProductToDelete?.name}" will also remove:
+
+• ${deleteStats.requests} API Key Request(s)
+• ${deleteStats.secrets} API Key Secret(s)
+
+This action cannot be undone.`
+              : `Deleting "${apiProductToDelete?.name}" will also remove all associated API Key Requests and Secrets.
+This action cannot be undone.`
+          }
+          confirmText={apiProductToDelete?.name}
+          severity="high"
+          deleting={deleting}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
       </Content>
     </Page>
   );
