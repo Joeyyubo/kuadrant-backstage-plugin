@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: alien-portal  # 实体名称（URL标识符，只能小写字母、数字、连字符）
+  title: Alien Portal  # 显示名称（可以包含空格）
+  description: Alien Developer Portal  # 描述
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://Joeyyubo.github.io/88jvc84m/
+      title: View Portal (GitHub Pages)
+      icon: web
+      type: website
+    - url: https://raw.githubusercontent.com/Joeyyubo/88jvc84m/main/index.html
+      title: View HTML (Raw)
+      icon: code
+      type: sourcecode
+    - url: https://github.com/Joeyyubo/88jvc84m/blob/main/index.html
+      title: View Source (index.html)
+      icon: code
+      type: sourcecode
+    - url: https://github.com/Joeyyubo/88jvc84m
+      title: Repository
+      icon: github
+      type: sourcecode
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
+

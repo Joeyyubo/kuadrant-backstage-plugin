@@ -16,6 +16,8 @@ import {
   healthCheckPlugin,
   pluginIDProviderService,
   rbacDynamicPluginsProvider,
+  catalogAuthModule,
+  scaffolderAuthModule,
 } from './modules';
 import { userSettingsBackend } from './modules/userSettings';
 
@@ -124,6 +126,9 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 backend.add(import('@backstage/plugin-catalog-backend'));
 
+// Configure catalog plugin to allow unauthenticated access for development
+backend.add(catalogAuthModule);
+
 // TODO: Probably we should now provide this as a dynamic plugin
 backend.add(import('@backstage/plugin-catalog-backend-module-openapi'));
 
@@ -131,6 +136,10 @@ backend.add(import('@backstage/plugin-proxy-backend'));
 
 // TODO: Check in the Scaffolder new backend plugin why the identity is not passed and the default is built instead.
 backend.add(import('@backstage/plugin-scaffolder-backend'));
+// Configure scaffolder plugin to allow unauthenticated access for development
+backend.add(scaffolderAuthModule);
+// Note: GitHub scaffolder module is loaded via dynamic plugin (backstage-plugin-scaffolder-backend-module-github-dynamic)
+// No need to add it statically here
 
 // search engine
 // See https://backstage.io/docs/features/search/search-engines

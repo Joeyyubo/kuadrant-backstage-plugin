@@ -53,18 +53,48 @@ export const CreateAPIProductDialog = ({ open, onClose, onSuccess }: CreateAPIPr
   const [creating, setCreating] = useState(false);
 
   const { value: httpRoutes, loading: httpRoutesLoading } = useAsync(async () => {
-    const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/httproutes`);
-    const data = await response.json();
-    // filter to only show httproutes annotated for backstage exposure
-    return (data.items || []).filter((route: any) =>
-      route.metadata.annotations?.['backstage.io/expose'] === 'true'
-    );
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/httproutes`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('httproutes endpoint not found, returning empty list');
+          return [];
+        }
+        throw new Error(`Failed to fetch httproutes: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      // filter to only show httproutes annotated for backstage exposure
+      return (data.items || []).filter((route: any) =>
+        route.metadata.annotations?.['backstage.io/expose'] === 'true'
+      );
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('httproutes endpoint not accessible, returning empty list');
+        return [];
+      }
+      throw error;
+    }
   }, [backendUrl, fetchApi, open]);
 
   // load planpolicies with full details to show associated plans
-  const { value: planPolicies } = useAsync(async () => {
-    const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/planpolicies`);
-    return await response.json();
+  const { value: planPolicies, loading: planPoliciesLoading, error: planPoliciesError } = useAsync(async () => {
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/planpolicies`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('planpolicies endpoint not found, returning empty list');
+          return { items: [] };
+        }
+        throw new Error(`Failed to fetch planpolicies: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('planpolicies endpoint not accessible, returning empty list');
+        return { items: [] };
+      }
+      throw error;
+    }
   }, [backendUrl, fetchApi, open]);
 
   // find planpolicy associated with selected httproute

@@ -52,19 +52,33 @@ export const ApiAccessCard = ({ namespace: propNamespace }: ApiAccessCardProps) 
   }, [identityApi]);
 
   const { value: requests, loading: keysLoading, error: keysError } = useAsync(async () => {
-    const url = namespace
-      ? `${backendUrl}/api/kuadrant/requests/my?namespace=${namespace}`
-      : `${backendUrl}/api/kuadrant/requests/my`;
-    const response = await fetchApi.fetch(url);
-    if (!response.ok) {
-      throw new Error('failed to fetch api key requests');
+    try {
+      const url = namespace
+        ? `${backendUrl}/api/kuadrant/requests/my?namespace=${namespace}`
+        : `${backendUrl}/api/kuadrant/requests/my`;
+      const response = await fetchApi.fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('requests/my endpoint not found, returning empty list');
+          return [];
+        }
+        throw new Error(`Failed to fetch api key requests: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      // filter to only this apiproduct's approved requests
+      const allRequests = data.items || [];
+      return allRequests.filter((r: APIKeyRequest) =>
+        r.spec.apiName === apiProductName && r.status?.phase === 'Approved'
+      );
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('requests/my endpoint not accessible (network error or CORS), returning empty list');
+        return [];
+      }
+      // Re-throw other errors
+      throw error;
     }
-    const data = await response.json();
-    // filter to only this apiproduct's approved requests
-    const allRequests = data.items || [];
-    return allRequests.filter((r: APIKeyRequest) =>
-      r.spec.apiName === apiProductName && r.status?.phase === 'Approved'
-    );
   }, [namespace, apiProductName, backendUrl, fetchApi]);
 
   if (keysLoading) {

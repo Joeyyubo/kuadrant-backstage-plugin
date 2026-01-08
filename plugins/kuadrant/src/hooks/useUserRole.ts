@@ -20,7 +20,20 @@ export function useUserRole(): { userInfo: UserInfo | null; loading: boolean } {
       const userId = identity.userEntityRef.split('/')[1] || 'guest';
       const ownershipRefs = identity.ownershipEntityRefs || [];
 
-      console.log('useUserRole debug:', { userId, ownershipRefs });
+      console.log('useUserRole debug:', { userId, ownershipRefs, userEntityRef: identity.userEntityRef });
+
+      // Special handling for guest user in development mode
+      // Guest user should have api-owner role based on RBAC config
+      if (userId === 'guest' || identity.userEntityRef === 'user:default/guest') {
+        console.log('useUserRole: detected guest user, assigning api-owner role');
+        return {
+          userId: 'guest',
+          role: 'api-owner' as UserRole,
+          isPlatformEngineer: false,
+          isApiOwner: true,
+          isApiConsumer: true,
+        };
+      }
 
       // determine roles based on group membership (not hierarchical)
       const isPlatformEngineer = ownershipRefs.includes('group:default/platform-engineers') ||
@@ -51,12 +64,12 @@ export function useUserRole(): { userInfo: UserInfo | null; loading: boolean } {
         isApiConsumer,
       };
     } catch (error) {
-      console.log('useUserRole error, returning guest with full access:', error);
-      // in dev mode without auth backend, return default guest with full access
+      console.log('useUserRole error, returning guest with api-owner access:', error);
+      // in dev mode without auth backend, return guest with api-owner role
       return {
         userId: 'guest',
-        role: 'platform-engineer' as UserRole,
-        isPlatformEngineer: true,
+        role: 'api-owner' as UserRole,
+        isPlatformEngineer: false,
         isApiOwner: true,
         isApiConsumer: true,
       };

@@ -40,6 +40,12 @@ export const DefaultMainMenuItems = {
       to: 'kuadrant',
       priority: 55,
     },
+    'default.external-portal': {
+      title: 'External Portal',
+      icon: 'extension',
+      to: 'external-portal',
+      priority: 54,
+    },
     'default.create': {
       title: 'Self-service',
       titleKey: 'menuItem.selfService',

@@ -601,10 +601,15 @@ export const DynamicRoot = ({
           bindAppRoutes(bind, resolvedRouteBindingTargets, routeBindings);
         },
         icons,
-        plugins: [
-          ...Object.values(staticPluginStore).map(entry => entry.plugin),
-          ...remoteBackstagePlugins,
-        ],
+        plugins: (() => {
+          const staticPlugins = Object.values(staticPluginStore).map(entry => entry.plugin);
+          const staticPluginIds = new Set(staticPlugins.map(p => p.getId()));
+          // Filter out remote plugins that are already in staticPluginStore to avoid duplicates
+          const filteredRemotePlugins = remoteBackstagePlugins.filter(
+            plugin => !staticPluginIds.has(plugin.getId())
+          );
+          return [...staticPlugins, ...filteredRemotePlugins];
+        })(),
         themes: [...filteredStaticThemes, ...dynamicThemeProviders],
         components: {
           ...defaultAppComponents,

@@ -11,4 +11,5 @@ spec:
     - ./kuadrant-users.yaml
     - ./resources.yaml
     - ./systems.yaml
+    - ./templates.yaml
 

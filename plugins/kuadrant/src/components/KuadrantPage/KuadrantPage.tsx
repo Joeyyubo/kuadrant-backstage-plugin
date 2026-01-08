@@ -110,13 +110,48 @@ export const ResourceList = () => {
   } = useKuadrantPermission(kuadrantPlanPolicyListPermission);
 
   const { value: apiProducts, loading: apiProductsLoading, error: apiProductsError } = useAsync(async (): Promise<KuadrantList> => {
-    const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/apiproducts`);
-    return await response.json();
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/apiproducts`);
+      if (!response.ok) {
+        // If endpoint doesn't exist (404) or other errors, return empty list in dev mode
+        if (response.status === 404) {
+          console.warn('kuadrant backend endpoint not found, returning empty list');
+          return { items: [] };
+        }
+        throw new Error(`Failed to fetch api products: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('kuadrant backend endpoint not accessible (network error or CORS), returning empty list');
+        return { items: [] };
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }, [backendUrl, fetchApi, refreshTrigger]);
 
   const { value: planPolicies, loading: planPoliciesLoading, error: planPoliciesError } = useAsync(async (): Promise<KuadrantList> => {
-    const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/planpolicies`);
-    return await response.json();
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/planpolicies`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('planpolicies endpoint not found, returning empty list');
+          return { items: [] };
+        }
+        throw new Error(`Failed to fetch planpolicies: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('planpolicies endpoint not accessible (network error or CORS), returning empty list');
+        return { items: [] };
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }, [backendUrl, fetchApi, refreshTrigger]);
 
   const loading = apiProductsLoading || planPoliciesLoading || createPermissionLoading || approvalQueuePermissionLoading || deletePermissionLoading || planPolicyPermissionLoading;

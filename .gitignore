@@ -44,6 +44,11 @@ site
 *.local.yaml
 !app-config.local.yaml
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Sensitive credentials
 *-credentials.local.yaml
 

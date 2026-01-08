@@ -212,53 +212,63 @@ export const ApprovalQueueCard = () => {
   const updatePermissionError = updateAllPermissionError || updateOwnPermissionError;
 
   const { value, loading, error } = useAsync(async () => {
-    const identity = await identityApi.getBackstageIdentity();
-    const reviewedBy = identity.userEntityRef;
+    try {
+      const identity = await identityApi.getBackstageIdentity();
+      const reviewedBy = identity.userEntityRef;
 
-    console.log('ApprovalQueueCard: fetching all requests from', `${backendUrl}/api/kuadrant/requests`);
+      console.log('ApprovalQueueCard: fetching all requests from', `${backendUrl}/api/kuadrant/requests`);
 
-    const response = await fetchApi.fetch(
-      `${backendUrl}/api/kuadrant/requests`
-    );
-    if (!response.ok) {
-      console.log('ApprovalQueueCard: failed to fetch requests, status:', response.status);
-      return { pending: [] as APIKeyRequest[], approved: [] as APIKeyRequest[], rejected: [] as APIKeyRequest[], reviewedBy };
+      const response = await fetchApi.fetch(
+        `${backendUrl}/api/kuadrant/requests`
+      );
+      if (!response.ok) {
+        console.log('ApprovalQueueCard: failed to fetch requests, status:', response.status);
+        return { pending: [] as APIKeyRequest[], approved: [] as APIKeyRequest[], rejected: [] as APIKeyRequest[], reviewedBy };
+      }
+
+      // check content-type before parsing json
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.log('ApprovalQueueCard: received non-json response');
+        return { pending: [] as APIKeyRequest[], approved: [] as APIKeyRequest[], rejected: [] as APIKeyRequest[], reviewedBy };
+      }
+
+      const data = await response.json();
+      const allRequests = data.items || [];
+
+      console.log('ApprovalQueueCard: received', allRequests.length, 'total requests');
+      console.log('ApprovalQueueCard: raw requests:', allRequests);
+
+      // group by status (field is 'phase' not 'status')
+      const pending = allRequests.filter((r: APIKeyRequest) => {
+        const phase = (r.status as any)?.phase || 'Pending';
+        return phase === 'Pending';
+      });
+      const approved = allRequests.filter((r: APIKeyRequest) => {
+        const phase = (r.status as any)?.phase;
+        return phase === 'Approved';
+      });
+      const rejected = allRequests.filter((r: APIKeyRequest) => {
+        const phase = (r.status as any)?.phase;
+        return phase === 'Rejected';
+      });
+
+      console.log('ApprovalQueueCard: grouped -', {
+        pending: pending.length,
+        approved: approved.length,
+        rejected: rejected.length,
+      });
+
+      return { pending, approved, rejected, reviewedBy };
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('kuadrant backend endpoint not accessible (network error or CORS), returning empty list');
+        return { pending: [] as APIKeyRequest[], approved: [] as APIKeyRequest[], rejected: [] as APIKeyRequest[], reviewedBy: 'user:default/guest' };
+      }
+      // Re-throw other errors
+      throw error;
     }
-
-    // check content-type before parsing json
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.log('ApprovalQueueCard: received non-json response');
-      return { pending: [] as APIKeyRequest[], approved: [] as APIKeyRequest[], rejected: [] as APIKeyRequest[], reviewedBy };
-    }
-
-    const data = await response.json();
-    const allRequests = data.items || [];
-
-    console.log('ApprovalQueueCard: received', allRequests.length, 'total requests');
-    console.log('ApprovalQueueCard: raw requests:', allRequests);
-
-    // group by status (field is 'phase' not 'status')
-    const pending = allRequests.filter((r: APIKeyRequest) => {
-      const phase = (r.status as any)?.phase || 'Pending';
-      return phase === 'Pending';
-    });
-    const approved = allRequests.filter((r: APIKeyRequest) => {
-      const phase = (r.status as any)?.phase;
-      return phase === 'Approved';
-    });
-    const rejected = allRequests.filter((r: APIKeyRequest) => {
-      const phase = (r.status as any)?.phase;
-      return phase === 'Rejected';
-    });
-
-    console.log('ApprovalQueueCard: grouped -', {
-      pending: pending.length,
-      approved: approved.length,
-      rejected: rejected.length,
-    });
-
-    return { pending, approved, rejected, reviewedBy };
   }, [backendUrl, fetchApi, identityApi, refresh]);
 
   const handleApprove = (request: APIKeyRequest) => {

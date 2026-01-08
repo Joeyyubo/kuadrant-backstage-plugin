@@ -1,0 +1,2 @@
+export { ExternalPortalPage } from './ExternalPortalPage';
+

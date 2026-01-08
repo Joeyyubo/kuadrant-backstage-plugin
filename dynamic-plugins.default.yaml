@@ -2,7 +2,7 @@ plugins:
   # Group: Github
   - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
     # TODO RHIDP-3187 - graduate this plugin to GA so it can be enabled by default
-    disabled: true
+    disabled: false
   - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
     disabled: true
     pluginConfig:

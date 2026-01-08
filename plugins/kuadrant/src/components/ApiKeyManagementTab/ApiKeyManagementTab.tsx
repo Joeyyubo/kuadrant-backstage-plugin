@@ -102,32 +102,60 @@ export const ApiKeyManagementTab = ({ namespace: propNamespace }: ApiKeyManageme
   }, [identityApi]);
 
   const { value: requests, loading: requestsLoading, error: requestsError } = useAsync(async () => {
-    const response = await fetchApi.fetch(
-      `${backendUrl}/api/kuadrant/requests/my?namespace=${namespace}`
-    );
-    if (!response.ok) {
-      throw new Error('failed to fetch requests');
+    try {
+      const response = await fetchApi.fetch(
+        `${backendUrl}/api/kuadrant/requests/my?namespace=${namespace}`
+      );
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('requests/my endpoint not found, returning empty list');
+          return [];
+        }
+        throw new Error(`Failed to fetch requests: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      // filter by apiproduct name, not httproute name
+      return (data.items || []).filter(
+        (r: APIKeyRequest) => r.spec.apiName === apiProductName && r.spec.apiNamespace === namespace
+      );
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('requests/my endpoint not accessible (network error or CORS), returning empty list');
+        return [];
+      }
+      // Re-throw other errors
+      throw error;
     }
-    const data = await response.json();
-    // filter by apiproduct name, not httproute name
-    return (data.items || []).filter(
-      (r: APIKeyRequest) => r.spec.apiName === apiProductName && r.spec.apiNamespace === namespace
-    );
   }, [apiProductName, namespace, refresh, fetchApi, backendUrl]);
 
   const { value: apiProduct, loading: plansLoading, error: plansError } = useAsync(async () => {
-    const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/apiproducts`);
-    if (!response.ok) {
-      throw new Error('failed to fetch api products');
+    try {
+      const response = await fetchApi.fetch(`${backendUrl}/api/kuadrant/apiproducts`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('apiproducts endpoint not found, returning null');
+          return null;
+        }
+        throw new Error(`Failed to fetch api products: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+
+      const product = data.items?.find((p: APIProduct) =>
+        p.metadata.namespace === namespace &&
+        p.metadata.name === apiProductName
+      );
+
+      return product;
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('apiproducts endpoint not accessible (network error or CORS), returning null');
+        return null;
+      }
+      // Re-throw other errors
+      throw error;
     }
-    const data = await response.json();
-
-    const product = data.items?.find((p: APIProduct) =>
-      p.metadata.namespace === namespace &&
-      p.metadata.name === apiProductName
-    );
-
-    return product;
   }, [namespace, apiProductName, fetchApi]);
 
   // check permissions with resource reference once we have the apiproduct

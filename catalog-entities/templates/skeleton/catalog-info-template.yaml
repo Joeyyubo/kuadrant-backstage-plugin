@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.component_id }}
+  title: ${{ values.portalName }} Developer Portal
+  description: ${{ values.description }}
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: ${{ values.githubPagesUrl }}
+      title: View Portal (GitHub Pages)
+      icon: web
+      type: website
+    - url: ${{ values.rawHtmlUrl }}
+      title: View HTML (Raw)
+      icon: code
+      type: sourcecode
+    - url: ${{ values.sourceHtmlUrl }}
+      title: View Source (index.html)
+      icon: code
+      type: sourcecode
+    - url: ${{ values.repoUrl }}
+      title: Repository
+      icon: github
+      type: sourcecode
+spec:
+  type: service
+  lifecycle: production
+  owner: ${{ values.owner }}
+

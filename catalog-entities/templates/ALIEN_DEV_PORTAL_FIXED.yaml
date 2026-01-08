@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kksvoil
+  title: kksvoil Developer Portal
+  description: fdsfsc
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://joeyyubo.github.io/Alien-dev-portal/
+      title: View Portal (GitHub Pages)
+      icon: web
+      type: website
+    - url: https://raw.githubusercontent.com/Joeyyubo/Alien-dev-portal/main/index.html
+      title: View HTML (Raw)
+      icon: code
+      type: sourcecode
+    - url: https://github.com/Joeyyubo/Alien-dev-portal/blob/main/index.html
+      title: View Source (index.html)
+      icon: code
+      type: sourcecode
+    - url: https://github.com/Joeyyubo/Alien-dev-portal
+      title: Repository
+      icon: github
+      type: sourcecode
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
+

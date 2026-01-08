@@ -66,15 +66,27 @@ export const apis: AnyApiFactory[] = [
       configApi: configApiRef,
     },
     factory: ({ github, gitlab, azure, bitbucket, configApi }) => {
+      // Check if Azure integrations are configured before including Azure auth
+      const azureConfigs = configApi.getOptionalConfigArray('integrations.azure');
+      const hasAzureIntegration = azureConfigs && azureConfigs.length > 0;
+
       const providers = [
         { key: 'github', ref: github, factory: ScmAuth.forGithub },
         { key: 'gitlab', ref: gitlab, factory: ScmAuth.forGitlab },
-        { key: 'azure', ref: azure, factory: ScmAuth.forAzure },
+        // Only include Azure auth provider if Azure integrations are configured
+        ...(hasAzureIntegration
+          ? [{ key: 'azure', ref: azure, factory: ScmAuth.forAzure }]
+          : []),
         { key: 'bitbucket', ref: bitbucket, factory: ScmAuth.forBitbucket },
       ];
 
       const scmAuths = providers.flatMap(({ key, ref, factory }) => {
         const configs = configApi.getOptionalConfigArray(`integrations.${key}`);
+        // Only initialize Azure auth if Azure integrations are configured
+        // This prevents connection timeouts to Microsoft services when not needed
+        if (key === 'azure' && (!configs || configs.length === 0)) {
+          return [];
+        }
         if (!configs?.length) {
           return [factory(ref)];
         }

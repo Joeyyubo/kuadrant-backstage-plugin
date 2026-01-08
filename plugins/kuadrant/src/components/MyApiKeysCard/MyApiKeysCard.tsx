@@ -34,14 +34,28 @@ export const MyApiKeysCard = () => {
   }, [identityApi]);
 
   const { value: requests, loading, error } = useAsync(async () => {
-    const response = await fetchApi.fetch(
-      `${backendUrl}/api/kuadrant/requests/my`
-    );
-    if (!response.ok) {
-      throw new Error('failed to fetch requests');
+    try {
+      const response = await fetchApi.fetch(
+        `${backendUrl}/api/kuadrant/requests/my`
+      );
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('requests/my endpoint not found, returning empty list');
+          return [];
+        }
+        throw new Error(`Failed to fetch requests: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      // Handle network errors, CORS issues, or other fetch failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('requests/my endpoint not accessible (network error or CORS), returning empty list');
+        return [];
+      }
+      // Re-throw other errors
+      throw error;
     }
-    const data = await response.json();
-    return data.items || [];
   }, [backendUrl, fetchApi, refresh]);
 
   if (loading) {

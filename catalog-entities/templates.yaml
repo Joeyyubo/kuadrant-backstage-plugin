@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: templates
+  description: A collection of software templates
+spec:
+  targets:
+    - ./templates/developer-portal.yaml
+    - ./templates/api-portal.yaml
+

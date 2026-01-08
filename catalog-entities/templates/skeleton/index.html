@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ values.portalName }} - Developer Portal</title>
+    {% raw %}
+    <style>
+        :root {
+            --brand-color: {{ values.brandColor }};
+            --primary-blue: #0066CC;
+            --light-blue: #E6F2FF;
+            --light-gray: #F5F5F5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #ffffff;
+        }
+        
+        /* Header Navigation */
+        .header-nav {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+        .nav-menu a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 0.5rem 0;
+        }
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--primary-blue);
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .auth-buttons a {
+            text-decoration: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .auth-buttons .signup {
+            background: var(--primary-blue);
+            color: white;
+        }
+        .auth-buttons .signup:hover {
+            background: #0052A3;
+        }
+        .auth-buttons .login {
+            color: #333;
+        }
+        .auth-buttons .login:hover {
+            background: #f5f5f5;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--light-blue) 0%, #F0F8FF 100%);
+            padding: 4rem 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-image {
+            flex: 1;
+            max-width: 500px;
+            height: 400px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M50 150 L100 50 L150 150 L100 130 Z" fill="%23000000" opacity="0.3"/></svg>') no-repeat center;
+            background-size: contain;
+            position: relative;
+        }
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            padding-left: 2rem;
+        }
+        .hero-content h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        .hero-content p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .hero-content .signup-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        /* Section Styles */
+        .section {
+            padding: 4rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 0.5rem;
+        }
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+        }
+        .section-button {
+            background: var(--primary-blue);
+            color: white;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .section-button:hover {
+            background: #0052A3;
+        }
+        
+        /* API Cards */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .api-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .api-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .api-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--light-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .api-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #000;
+        }
+        .api-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .api-card .explore-btn {
+            background: transparent;
+            border: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .api-card .explore-btn:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        /* Get Started Steps */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .step-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .step-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #000;
+        }
+        .step-card p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .step-card a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        /* Business Success Section */
+        .business-section {
+            background: var(--light-gray);
+            padding: 4rem 4rem;
+        }
+        .business-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .partners-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        .partner-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .partner-logo {
+            width: 80px;
+            height: 80px;
+            background: #ff0000;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .partner-info h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .partner-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .ad-placeholder {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .ad-placeholder h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #666;
+        }
+        .ad-placeholder ul {
+            list-style: none;
+            color: #666;
+        }
+        .ad-placeholder li {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--light-blue);
+            padding: 3rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-social {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .social-icon:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .footer-links a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .footer-links a:hover {
+            color: var(--primary-blue);
+        }
+        .footer-version {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        /* Chatbot Icon */
+        .chatbot-icon {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: #8B5CF6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.2s;
+        }
+        .chatbot-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .api-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .steps-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .header-nav {
+                padding: 1rem 2rem;
+            }
+            .nav-menu {
+                display: none;
+            }
+            .hero {
+                flex-direction: column;
+                padding: 2rem;
+            }
+            .api-grid,
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+            .business-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    {% endraw %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var brandColor = "{{ values.brandColor }}";
+            if (brandColor) {
+                document.documentElement.style.setProperty('--brand-color', brandColor);
+                var primaryBlue = brandColor;
+                document.documentElement.style.setProperty('--primary-blue', primaryBlue);
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <nav class="header-nav">
+        <div class="logo-section">
+            <div class="logo-icon">✈</div>
+            <div class="logo-text">{{ values.portalName }}</div>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#" class="active">Home</a></li>
+            <li><a href="#">APIs</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">Credentials</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+        <div class="auth-buttons">
+            <a href="#" class="signup">Sign up</a>
+            <a href="#" class="login">Log in</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-image">
+            <!-- Airplane silhouette placeholder -->
+            <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#E6F2FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F0F8FF;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#skyGradient)"/>
+                <!-- Airplane silhouette -->
+                <path d="M50 200 L150 80 L200 100 L250 60 L300 80 L350 100 L320 140 L280 120 L200 160 L150 200 Z" 
+                      fill="#000000" opacity="0.3"/>
+            </svg>
+        </div>
+        <div class="hero-content">
+            <h1>Unlock endless possibilities with Smart Airline</h1>
+            <p>Empower innovations from <a href="#" class="signup-link">Sign up</a></p>
+        </div>
+    </section>
+
+    <!-- Explore APIs Section -->
+    <section class="section">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Explore APIs</h2>
+                <p class="section-subtitle">Discover and integrate APIs into your application.</p>
+            </div>
+            <button class="section-button">View all APIs</button>
+        </div>
+        <div class="api-grid">
+            <div class="api-card">
+                <div class="api-icon">✈</div>
+                <h3>Flights</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing. Lorem ipsum dolor sit amet.</p>
+                <button class="explore-btn">Explore Flight details APIs</button>
+            </div>
+            <div class="api-card">
+                <div class="api-icon">$</div>
+                <h3>Pricing</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing. Lorem ipsum dolor sit amet.</p>
+                <button class="explore-btn">Explore Pricing APIs</button>
+            </div>
+            <div class="api-card">
+                <div class="api-icon">👤</div>
+                <h3>Identification</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing. Lorem ipsum dolor sit amet.</p>
+                <button class="explore-btn">Explore identification APIs</button>
+            </div>
+            <div class="api-card">
+                <div class="api-icon">📢</div>
+                <h3>Notification</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing. Lorem ipsum dolor sit amet.</p>
+                <button class="explore-btn">Explore Notification APIs</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Get Started Section -->
+    <section class="section">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Get started</h2>
+                <p class="section-subtitle">Learn how to get started and integrate with APIs</p>
+            </div>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Sign up</h3>
+                <p><a href="#">Register a new account</a> to start using and accessing our dev portal and APIs.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Discover APIs</h3>
+                <p><a href="#">Explore our APIs</a> that best suites your requirements.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Register for an API</h3>
+                <p>Find the API you need for your applications and register for an API access before requesting.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3>Access API credentials</h3>
+                <p><a href="#">Generate and manage API credentials</a> to start consuming those APIs.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h3>Use the API</h3>
+                <p>Integrate the APIs to proceed your applications once the credentials are received.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Success Section -->
+    <section class="business-section">
+        <div style="max-width: 1400px; margin: 0 auto;">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Business success with us</h2>
+                    <p class="section-subtitle">"Partner with us, and create business brilliance together!"</p>
+                </div>
+            </div>
+            <div class="business-content">
+                <div class="partners-grid">
+                    <div class="partner-card">
+                        <div class="partner-logo">TK</div>
+                        <div class="partner-info">
+                            <h3>Turkish Airline</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <div class="partner-logo">Q</div>
+                        <div class="partner-info">
+                            <h3>Qantas</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="ad-placeholder">
+                        <h4>Placeholder used for advertisement</h4>
+                        <ul>
+                            <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        </ul>
+                    </div>
+                    <div class="ad-placeholder">
+                        <h4>Placeholder used for advertisement</h4>
+                        <ul>
+                            <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                            <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-social">
+            <a href="#" class="social-icon">𝕏</a>
+            <a href="#" class="social-icon">📷</a>
+            <a href="#" class="social-icon">▶</a>
+            <a href="#" class="social-icon">in</a>
+        </div>
+        <div class="footer-links">
+            <a href="#">Term of use</a>
+            <a href="#">Privacy policy</a>
+            <a href="#">Cookies preference</a>
+            <span class="footer-version">Version 1.1</span>
+        </div>
+    </footer>
+
+    <!-- Chatbot Icon -->
+    <div class="chatbot-icon">💬</div>
+</body>
+</html>

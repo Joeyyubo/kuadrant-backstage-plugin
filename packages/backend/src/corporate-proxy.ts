@@ -20,6 +20,32 @@ import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
  * Ref: https://github.com/backstage/backstage/blob/master/contrib/docs/tutorials/help-im-behind-a-corporate-proxy.md
  */
 export function configureCorporateProxyAgent() {
+  // Only configure proxy if proxy environment variables are actually set
+  // This prevents issues when no proxy is needed
+  const hasProxy = process.env.HTTP_PROXY || process.env.HTTPS_PROXY || 
+                   process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.GLOBAL_AGENT_HTTPS_PROXY;
+  
+  if (!hasProxy) {
+    return;
+  }
+
+  // Ensure localhost is excluded from proxy, but allow GitHub through proxy
+  // This allows Git operations to use the proxy when needed
+  if (!process.env.NO_PROXY && !process.env.GLOBAL_AGENT_NO_PROXY) {
+    const noProxy = 'localhost,127.0.0.1,*.local,0.0.0.0';
+    process.env.NO_PROXY = noProxy;
+    process.env.GLOBAL_AGENT_NO_PROXY = noProxy;
+  }
+  
+  // Ensure Git operations inherit proxy environment variables
+  // Git uses HTTP_PROXY and HTTPS_PROXY environment variables
+  if (process.env.HTTP_PROXY && !process.env.GIT_HTTP_PROXY) {
+    process.env.GIT_HTTP_PROXY = process.env.HTTP_PROXY;
+  }
+  if (process.env.HTTPS_PROXY && !process.env.GIT_HTTPS_PROXY) {
+    process.env.GIT_HTTPS_PROXY = process.env.HTTPS_PROXY;
+  }
+
   // Bootstrap global-agent, which addresses node-fetch proxy-ing.
   // global-agent purposely uses namespaced env vars to prevent conflicting behavior with other libraries,
   // but user can set GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE to an empty value for global-agent to use

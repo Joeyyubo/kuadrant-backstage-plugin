@@ -1,0 +1,113 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: api-portal
+  title: Create a portal as framework
+  description: Create a complete Red Hat Developer Hub (RHDH) instance - a full Backstage-based developer portal framework with frontend and backend, not just a static HTML page
+  tags:
+    - api
+    - portal
+    - developer
+    - rhdh
+spec:
+  owner: rhdh-team
+  type: service
+
+  parameters:
+    - title: Portal Configuration
+      required:
+        - portalName
+        - description
+        - portalVisibility
+        - brandColor
+        - repoOwner
+        - repoName
+      properties:
+        portalName:
+          title: Portal name
+          type: string
+          description: The name of your API portal
+          ui:autofocus: true
+          ui:field: EntityNamePicker
+        description:
+          title: Description
+          type: string
+          description: A detailed description of your API portal
+          ui:widget: textarea
+        portalVisibility:
+          title: Portal visibility
+          type: string
+          description: Control who can access the portal
+          enum:
+            - Private
+            - Public
+          enumNames:
+            - Private (Only authenticated users can view APIs)
+            - Public (Anyone can view APIs)
+          default: Private
+        brandColor:
+          title: Brand color
+          type: string
+          description: The primary brand color for your portal (hex format)
+          default: "#F22626"
+          ui:widget: color
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+              - User
+        repoOwner:
+          title: Repository Owner
+          type: string
+          description: GitHub username or organization name (e.g., my-org or my-username)
+          ui:autofocus: false
+        repoName:
+          title: Repository Name
+          type: string
+          description: GitHub repository name (e.g., my-api-portal)
+          ui:autofocus: false
+
+  steps:
+    - id: fetch
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./api-portal-skeleton
+        values:
+          portalName: ${{ parameters.portalName }}
+          description: ${{ parameters.description }}
+          portalVisibility: ${{ parameters.portalVisibility }}
+          brandColor: ${{ parameters.brandColor }}
+          owner: ${{ parameters.owner }}
+          component_id: ${{ parameters.portalName }}
+          repoOwner: ${{ parameters.repoOwner }}
+          repoName: ${{ parameters.repoName }}
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        description: ${{ parameters.description }}
+        repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
+        defaultBranch: main
+        repoVisibility: ${{ parameters.portalVisibility | lower }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+

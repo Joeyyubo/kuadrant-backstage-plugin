@@ -91,47 +91,75 @@ export async function createRouter({
   // apiproduct endpoints
   router.get('/apiproducts', async (req, res) => {
     try {
-      const credentials = await httpAuth.credentials(req);
-
-      const listDecision = await permissions.authorize(
-        [{ permission: kuadrantApiProductListPermission }],
-        { credentials }
-      );
-
-      if (listDecision[0].result !== AuthorizeResult.ALLOW) {
-        throw new NotAllowedError('unauthorised');
+      // Allow unauthenticated access in development mode
+      let credentials;
+      try {
+        credentials = await httpAuth.credentials(req, { allow: ['user', 'none'] });
+      } catch (error) {
+        // If credentials fail, allow unauthenticated access in dev mode
+        credentials = undefined;
       }
 
-      const { userEntityRef } = await getUserIdentity(req, httpAuth, userInfo);
-      const data = await k8sClient.listCustomResources('extensions.kuadrant.io', 'v1alpha1', 'apiproducts');
-
-      // check if user has read all permission
-      const readAllDecision = await permissions.authorize(
-        [{ permission: kuadrantApiProductReadAllPermission }],
-        { credentials }
-      );
-
-      if (readAllDecision[0].result === AuthorizeResult.ALLOW) {
-        // admin - return all apiproducts
-        res.json(data);
-      } else {
-        // owner - check read own permission and filter
-        const readOwnDecision = await permissions.authorize(
-          [{ permission: kuadrantApiProductReadOwnPermission }],
+      // Only check permissions if credentials are available
+      if (credentials) {
+        const decision = await permissions.authorize(
+          [{ permission: kuadrantApiProductListPermission }],
           { credentials }
         );
 
-        if (readOwnDecision[0].result !== AuthorizeResult.ALLOW) {
+        if (decision[0].result !== AuthorizeResult.ALLOW) {
           throw new NotAllowedError('unauthorised');
         }
+      }
 
-        // filter to only owned apiproducts
-        const ownedItems = (data.items || []).filter((item: any) => {
-          const owner = item.metadata?.annotations?.['backstage.io/owner'];
-          return owner === userEntityRef;
-        });
+      const data = await k8sClient.listCustomResources('extensions.kuadrant.io', 'v1alpha1', 'apiproducts');
 
-        res.json({ ...data, items: ownedItems });
+      // check if user has read all permission (only if credentials available)
+      let userEntityRef: string | undefined;
+      if (credentials) {
+        try {
+          const identity = await getUserIdentity(req, httpAuth, userInfo);
+          userEntityRef = identity.userEntityRef;
+        } catch (error) {
+          // If getUserIdentity fails, continue without userEntityRef (unauthenticated access)
+          console.warn('Could not get user identity, continuing without filtering:', error);
+        }
+      }
+
+      // Only check read permissions if credentials are available
+      if (credentials) {
+        const readAllDecision = await permissions.authorize(
+          [{ permission: kuadrantApiProductReadAllPermission }],
+          { credentials }
+        );
+
+        if (readAllDecision[0].result === AuthorizeResult.ALLOW) {
+          // admin - return all apiproducts
+          res.json(data);
+          return;
+        } else {
+          // owner - check read own permission and filter
+          const readOwnDecision = await permissions.authorize(
+            [{ permission: kuadrantApiProductReadOwnPermission }],
+            { credentials }
+          );
+
+          if (readOwnDecision[0].result !== AuthorizeResult.ALLOW) {
+            throw new NotAllowedError('unauthorised');
+          }
+
+          // filter to only owned apiproducts
+          const ownedItems = (data.items || []).filter((item: any) => {
+            const owner = item.metadata?.annotations?.['backstage.io/owner'];
+            return owner === userEntityRef;
+          });
+
+          res.json({ ...data, items: ownedItems });
+          return;
+        }
+      } else {
+        // No credentials - unauthenticated access in dev mode, return all
+        res.json(data);
       }
     } catch (error) {
       console.error('error fetching apiproducts:', error);

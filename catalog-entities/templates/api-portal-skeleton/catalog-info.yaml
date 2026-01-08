@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.component_id }}
+  title: ${{ values.portalName }} Developer Hub
+  description: ${{ values.description }}
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
+      title: Repository
+      icon: github
+      type: sourcecode
+spec:
+  type: service
+  lifecycle: production
+  owner: ${{ values.owner }}

@@ -25,6 +25,7 @@ import {
   KuadrantPage,
   PlanPolicyDetailPage,
 } from '@kuadrant/kuadrant-backstage-plugin-frontend';
+import { ExternalPortalPage } from '@kuadrant/external-portal-backstage-plugin-frontend';
 import DynamicRootContext from '@red-hat-developer-hub/plugin-utils';
 
 import getDynamicRootConfig from '../../utils/dynamicUI/getDynamicRootConfig';
@@ -144,6 +145,7 @@ const AppBase = () => {
                 element={<PlanPolicyDetailPage />}
               />
               <Route path="/kuadrant" element={<KuadrantPage />} />
+              <Route path="/external-portal" element={<ExternalPortalPage />} />
               <Route path="/rbac" element={<RbacPage />} />
               {dynamicRoutes.map(
                 ({ Component, staticJSXContent, path, config: { props } }) => {
