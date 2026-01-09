@@ -1,21 +1,22 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: ${{ values.component_id }}
-  title: ${{ values.portalName }} Developer Hub
-  description: ${{ values.description }}
+  name: ${{ values.component_id | dump }}
+  title: ${{ values.portalName | dump }} Developer Hub
+  description: ${{ values.description | dump }}
   annotations:
     backstage.io/techdocs-ref: dir:.
   links:
-    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
+    - url: https://github.com/${{ values.repoOwner | dump }}/${{ values.repoName | dump }}
       title: Portal
       icon: web
       type: website
-    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
+    - url: https://github.com/${{ values.repoOwner | dump }}/${{ values.repoName | dump }}
       title: Repository
       icon: github
       type: sourcecode
 spec:
   type: service
   lifecycle: production
+  # 关键修复：确保这里没有任何缩进或多余冒号，必须是一行纯字符串
   owner: ${{ values.owner }}

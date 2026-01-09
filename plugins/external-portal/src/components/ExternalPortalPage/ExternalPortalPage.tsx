@@ -31,11 +31,28 @@ export const ExternalPortalPage = () => {
   const entities = value || [];
 
   // Filter components that have links to external portals
-  const portalEntities = entities.filter(entity => 
-    entity.metadata.links?.some(link => 
+  // Include entities with Portal/GitHub Pages links OR framework portals (Developer Hub)
+  // Exclude Red Hat Developer Hub (red-hat-developer-hub)
+  const portalEntities = entities.filter(entity => {
+    // Exclude Red Hat Developer Hub
+    if (entity.metadata.name === 'red-hat-developer-hub') {
+      return false;
+    }
+    
+    // Check for Portal/GitHub Pages links
+    const hasPortalLink = entity.metadata.links?.some(link => 
       link.title?.includes('Portal') || link.title?.includes('GitHub Pages')
-    )
-  );
+    );
+    
+    // Check if it's a framework portal (Developer Hub)
+    const title = entity.metadata.title || '';
+    const description = entity.metadata.description || '';
+    const isFrameworkPortal = title.includes('Developer Hub') || 
+                               description.toLowerCase().includes('framework') ||
+                               description.toLowerCase().includes('rhdh');
+    
+    return hasPortalLink || isFrameworkPortal;
+  });
 
   // Check if entity is Alien Developer Portal
   const isAlienPortal = (entity: any) => {
@@ -52,6 +69,15 @@ export const ExternalPortalPage = () => {
     return title.toLowerCase().includes('boo-dev-portal') || 
            name.toLowerCase().includes('boo-dev-portal') ||
            title.toLowerCase().includes('boo') && title.toLowerCase().includes('api portal');
+  };
+
+  // Check if entity is frameportal
+  const isFramePortal = (entity: any) => {
+    const title = entity.metadata.title || entity.metadata.name || '';
+    const name = entity.metadata.name || '';
+    return title.toLowerCase().includes('frameportal') || 
+           name.toLowerCase().includes('frameportal') ||
+           name === 'frameportal';
   };
 
   // Determine portal type (website or framework)
@@ -89,6 +115,14 @@ export const ExternalPortalPage = () => {
     { name: 'User Management API', version: 'v2.1', type: 'REST', status: 'Active' },
     { name: 'Payment Processing API', version: 'v1.8', type: 'REST', status: 'Active' },
     { name: 'Analytics API', version: 'v3.0', type: 'REST', status: 'Active' },
+  ];
+
+  // Mock API data for frameportal
+  const framePortalApis = [
+    { name: 'Framework Core API', version: 'v1.0', type: 'REST', status: 'Active' },
+    { name: 'Catalog Management API', version: 'v2.3', type: 'REST', status: 'Active' },
+    { name: 'Plugin Registry API', version: 'v1.5', type: 'REST', status: 'Active' },
+    { name: 'Authentication API', version: 'v3.1', type: 'REST', status: 'Active' },
   ];
 
   const handleCreateClick = () => {
@@ -207,7 +241,11 @@ export const ExternalPortalPage = () => {
           )}
           {portalEntities.map(entity => {
             const portalType = getPortalType(entity);
-            const portalTitle = entity.metadata.title || entity.metadata.name;
+            // Remove " Developer Hub" suffix from framework portal titles
+            let portalTitle = entity.metadata.title || entity.metadata.name;
+            if (portalType === 'framework' && portalTitle.endsWith(' Developer Hub')) {
+              portalTitle = portalTitle.replace(' Developer Hub', '');
+            }
             
             // API List component with collapse functionality
             const ApiListSection = () => {
@@ -223,6 +261,9 @@ export const ExternalPortalPage = () => {
               } else if (isBooDevPortal(entity)) {
                 apiList = booDevPortalApis;
                 apiCount = booDevPortalApis.length;
+              } else if (isFramePortal(entity)) {
+                apiList = framePortalApis;
+                apiCount = framePortalApis.length;
               }
               
               // Don't render if no APIs
