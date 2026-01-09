@@ -1,0 +1,47 @@
+app:
+  title: Red Hat Developer Hub
+  baseUrl: http://localhost:3001
+
+organization:
+  name: My Org
+
+backend:
+  baseUrl: http://localhost:7008
+  listen:
+    port: 7008
+  csp:
+    connect-src:
+      - "'self'"
+      - 'http:'
+      - 'https:'
+  cors:
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+
+proxy:
+  skipInvalidProxies: true
+  endpoints: {}
+
+techdocs:
+  builder: external
+
+auth:
+  environment: development
+
+dynamicPlugins:
+  rootDirectory: ./dynamic-plugins-root
+  frontend: {}
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, Group, Resource, Location, Template, API, User]
+  locations:
+    - type: file
+      target: ../../catalog-entities/all.yaml
+

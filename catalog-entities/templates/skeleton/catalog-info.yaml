@@ -1,5 +1,3 @@
-# This file will be regenerated after publish:github step
-# Placeholder - will be replaced by generate-catalog-info.sh script
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
@@ -9,19 +7,11 @@ metadata:
   annotations:
     backstage.io/techdocs-ref: dir:.
   links:
-    - url: __GITHUB_PAGES_URL__
-      title: View Portal (GitHub Pages)
+    - url: https://${{ values.repoOwner | lower }}.github.io/${{ values.repoName }}/
+      title: View Portal
       icon: web
       type: website
-    - url: __RAW_HTML_URL__
-      title: View HTML (Raw)
-      icon: code
-      type: sourcecode
-    - url: __SOURCE_HTML_URL__
-      title: View Source (index.html)
-      icon: code
-      type: sourcecode
-    - url: __REPO_URL__
+    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
       title: Repository
       icon: github
       type: sourcecode

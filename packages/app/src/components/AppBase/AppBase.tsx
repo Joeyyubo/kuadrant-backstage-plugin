@@ -25,7 +25,10 @@ import {
   KuadrantPage,
   PlanPolicyDetailPage,
 } from '@kuadrant/kuadrant-backstage-plugin-frontend';
-import { ExternalPortalPage } from '@kuadrant/external-portal-backstage-plugin-frontend';
+import { 
+  ExternalPortalPage,
+  externalPortalPlugin 
+} from '@kuadrant/external-portal-backstage-plugin-frontend';
 import DynamicRootContext from '@red-hat-developer-hub/plugin-utils';
 
 import getDynamicRootConfig from '../../utils/dynamicUI/getDynamicRootConfig';

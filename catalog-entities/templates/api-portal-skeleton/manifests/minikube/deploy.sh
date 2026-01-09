@@ -62,3 +62,4 @@ echo "查看日志:"
 echo "   kubectl logs -f deployment/$APP_NAME"
 echo ""
 
+

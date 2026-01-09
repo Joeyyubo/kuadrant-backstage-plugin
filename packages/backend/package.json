@@ -8,8 +8,8 @@
     "role": "backend"
   },
   "scripts": {
-    "start": "backstage-cli package start --require ./src/instrumentation.js",
-    "start:next": "APP_CONFIG_app_packageName=app-next ENABLE_STANDARD_MODULE_FEDERATION=true backstage-cli package start --require ./src/instrumentation.js",
+    "start": "NODE_OPTIONS=--no-node-snapshot backstage-cli package start --require ./src/instrumentation.js",
+    "start:next": "NODE_OPTIONS=--no-node-snapshot APP_CONFIG_app_packageName=app-next ENABLE_STANDARD_MODULE_FEDERATION=true backstage-cli package start --require ./src/instrumentation.js",
     "start:prometheus": "docker run --mount type=bind,source=./prometheus.yml,destination=/etc/prometheus/prometheus.yml --publish published=9090,target=9090,protocol=tcp prom/prometheus",
     "build": "backstage-cli package build",
     "lint:check": "backstage-cli package lint",

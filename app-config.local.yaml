@@ -1,0 +1,65 @@
+app:
+  title: Red Hat Developer Hub
+  baseUrl: http://localhost:3001
+
+organization:
+  name: My Org
+
+backend:
+  baseUrl: http://localhost:7008
+  listen:
+    port: 7008
+  csp:
+    connect-src:
+      - "'self'"
+      - 'http:'
+      - 'https:'
+  cors:
+    origin: http://localhost:3001
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: better-sqlite3
+    connection:
+      directory: .
+
+scaffolder:
+  defaultAuthor:
+    name: Backstage
+    email: backstage@backstage.io
+  defaultCommitMessage: 'chore: created via Backstage scaffolder'
+  taskTimeout: 1800
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+proxy:
+  skipInvalidProxies: true
+  endpoints: {}
+
+techdocs:
+  builder: external
+
+auth:
+  environment: development
+  providers:
+    guest:
+      dangerouslyAllowOutsideDevelopment: true
+      userEntityRef: user:default/guest
+
+dynamicPlugins:
+  rootDirectory: ./dynamic-plugins-root
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, Group, Resource, Location, Template, API, User]
+  locations:
+    - type: file
+      target: ../../catalog-entities/all.yaml
+
+

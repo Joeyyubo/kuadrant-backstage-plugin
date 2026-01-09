@@ -8,6 +8,10 @@ metadata:
     backstage.io/techdocs-ref: dir:.
   links:
     - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
+      title: Portal
+      icon: web
+      type: website
+    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
       title: Repository
       icon: github
       type: sourcecode

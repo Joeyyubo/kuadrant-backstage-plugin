@@ -144,3 +144,4 @@ A: 可以！使用脚本方法可以一次注册多个 repos：
 2. ✅ Portal 会出现在 External Portal 页面
 3. ✅ 即使重启 Backstage，portal 也会保留（因为现在使用文件数据库）
 
+

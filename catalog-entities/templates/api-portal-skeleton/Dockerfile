@@ -50,3 +50,4 @@ ENV APP_CONFIG_app_baseUrl=http://localhost:7007
 # Start the backend (which serves both frontend and backend)
 CMD ["node", "packages/backend"]
 
+

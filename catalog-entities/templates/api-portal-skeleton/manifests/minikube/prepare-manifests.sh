@@ -50,3 +50,4 @@ echo "所有模板变量已替换为: $APP_NAME_CLEAN"
 echo ""
 echo "现在可以运行: ./deploy.sh"
 
+

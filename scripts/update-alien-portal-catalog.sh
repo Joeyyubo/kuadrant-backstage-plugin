@@ -40,3 +40,4 @@ echo ""
 echo "请复制上面的内容，然后在 GitHub 上更新："
 echo "https://github.com/Joeyyubo/Alien-dev-portal/edit/main/catalog-info.yaml"
 
+

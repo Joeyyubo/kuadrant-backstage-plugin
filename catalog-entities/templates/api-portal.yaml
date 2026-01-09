@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: api-portal
-  title: Create a portal as framework
-  description: Create a complete Red Hat Developer Hub (RHDH) instance - a full Backstage-based developer portal framework with frontend and backend, not just a static HTML page
+  title: Portal as framework
+  description: Create a full Backstage-based developer portal framework with frontend and backend
   tags:
     - api
     - portal
@@ -14,25 +14,25 @@ spec:
   type: service
 
   parameters:
-    - title: Portal Configuration
+    - title: Framework Configuration
       required:
         - portalName
         - description
         - portalVisibility
-        - brandColor
+        - owner
         - repoOwner
         - repoName
       properties:
         portalName:
           title: Portal name
           type: string
-          description: The name of your API portal
+          description: The name of your Backstage framework portal
           ui:autofocus: true
           ui:field: EntityNamePicker
         description:
           title: Description
           type: string
-          description: A detailed description of your API portal
+          description: A detailed description of your Backstage framework portal
           ui:widget: textarea
         portalVisibility:
           title: Portal visibility
@@ -42,15 +42,9 @@ spec:
             - Private
             - Public
           enumNames:
-            - Private (Only authenticated users can view APIs)
-            - Public (Anyone can view APIs)
+            - Private (Only authenticated users can access)
+            - Public (Anyone can access)
           default: Private
-        brandColor:
-          title: Brand color
-          type: string
-          description: The primary brand color for your portal (hex format)
-          default: "#F22626"
-          ui:widget: color
         owner:
           title: Owner
           type: string
@@ -68,8 +62,57 @@ spec:
         repoName:
           title: Repository Name
           type: string
-          description: GitHub repository name (e.g., my-api-portal)
+          description: GitHub repository name (e.g., my-backstage-portal). Make sure this name doesn't already exist in your GitHub account.
           ui:autofocus: false
+    - title: Frontend Configuration
+      properties:
+        enableHome:
+          title: Home
+          type: boolean
+          description: Enable Home menu item
+          default: true
+        enableCatalog:
+          title: Catalog
+          type: boolean
+          description: Enable Catalog menu item
+          default: false
+        enableApi:
+          title: APIs
+          type: boolean
+          description: Enable APIs menu item
+          default: true
+        enableSearch:
+          title: Search
+          type: boolean
+          description: Enable Search menu item
+          default: false
+        enableLearningPaths:
+          title: Learning Paths
+          type: boolean
+          description: Enable Learning Paths menu item
+          default: false
+        enableSelfService:
+          title: Self-service
+          type: boolean
+          description: Enable Self-service menu item
+          default: false
+    - title: Backend Configuration
+      properties:
+        enableTechDocs:
+          title: Enable TechDocs
+          type: boolean
+          description: Enable TechDocs documentation support
+          default: true
+        enableKubernetes:
+          title: Enable Kubernetes
+          type: boolean
+          description: Enable Kubernetes plugin support
+          default: false
+        enableGitHub:
+          title: Enable GitHub Integration
+          type: boolean
+          description: Enable GitHub integration for catalog discovery
+          default: false
 
   steps:
     - id: fetch
@@ -80,12 +123,19 @@ spec:
         values:
           portalName: ${{ parameters.portalName }}
           description: ${{ parameters.description }}
-          portalVisibility: ${{ parameters.portalVisibility }}
-          brandColor: ${{ parameters.brandColor }}
           owner: ${{ parameters.owner }}
           component_id: ${{ parameters.portalName }}
           repoOwner: ${{ parameters.repoOwner }}
           repoName: ${{ parameters.repoName }}
+          enableHome: ${{ parameters.enableHome }}
+          enableCatalog: ${{ parameters.enableCatalog }}
+          enableApi: ${{ parameters.enableApi }}
+          enableSearch: ${{ parameters.enableSearch }}
+          enableLearningPaths: ${{ parameters.enableLearningPaths }}
+          enableSelfService: ${{ parameters.enableSelfService }}
+          enableTechDocs: ${{ parameters.enableTechDocs }}
+          enableKubernetes: ${{ parameters.enableKubernetes }}
+          enableGitHub: ${{ parameters.enableGitHub }}
 
     - id: publish
       name: Publish
@@ -95,13 +145,13 @@ spec:
         repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
         defaultBranch: main
         repoVisibility: ${{ parameters.portalVisibility | lower }}
+        sourcePath: .
 
     - id: register
       name: Register
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
+        repoContentsUrl: https://github.com/${{ parameters.repoOwner }}/${{ parameters.repoName }}/blob/main/catalog-info.yaml
 
   output:
     links:

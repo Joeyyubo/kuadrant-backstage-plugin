@@ -132,3 +132,4 @@ Catalog 中的 "View Portal (GitHub Pages)" 链接指向错误的 URL：
 
 **解决方案**：在 `publish` 步骤之后，使用实际的 repo URL 来更新 `catalog-info.yaml` 中的链接。
 
+

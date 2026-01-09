@@ -114,3 +114,4 @@ Catalog 中的 "View Portal (GitHub Pages)" 链接指向错误的 URL：
 
 **在模板中添加一个步骤，使用 `publish:github` 的输出来自动更新 `catalog-info.yaml`**
 
+

@@ -3,6 +3,8 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 import { apis } from './apis';
 import ScalprumRoot from './components/DynamicRoot/ScalprumRoot';
 import { DefaultMainMenuItems } from './consts';
+import { externalPortalPlugin } from '@kuadrant/external-portal-backstage-plugin-frontend';
+import { StaticPlugins } from './components/DynamicRoot/DynamicRoot';
 
 // The base UI configuration, these values can be overridden by values
 // specified in external configuration files
@@ -17,6 +19,14 @@ const baseFrontendConfig = {
   },
 };
 
+// Static plugins that should not be loaded as dynamic plugins
+const staticPlugins: StaticPlugins = {
+  'external-portal': {
+    plugin: externalPortalPlugin,
+    module: () => import('@kuadrant/external-portal-backstage-plugin-frontend'),
+  },
+};
+
 const AppRoot = () => (
   <>
     <GlobalStyles styles={{ html: { overflowY: 'hidden' } }} />
@@ -24,6 +34,7 @@ const AppRoot = () => (
       apis={apis}
       afterInit={() => import('./components/AppBase')}
       baseFrontendConfig={baseFrontendConfig}
+      plugins={staticPlugins}
     />
   </>
 );

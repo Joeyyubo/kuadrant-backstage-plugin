@@ -11,3 +11,4 @@ resources:
 commonLabels:
   app: {{ values.portalName }}-rhdh
 
+

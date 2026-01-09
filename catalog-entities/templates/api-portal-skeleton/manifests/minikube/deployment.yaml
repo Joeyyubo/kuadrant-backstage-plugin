@@ -62,3 +62,4 @@ spec:
         persistentVolumeClaim:
           claimName: {{ values.portalName }}-rhdh-database
 
+

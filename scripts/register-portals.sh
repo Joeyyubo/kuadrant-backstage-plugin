@@ -67,3 +67,4 @@ done
 
 echo "Done! Check the catalog at http://localhost:3001/catalog"
 
+
